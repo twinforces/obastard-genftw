@@ -26,22 +26,7 @@ import genftw.core.match.ElementFinder;
 import genftw.core.match.ElementMatcher;
 import genftw.core.match.MetaDataMatcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedOptions;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -49,6 +34,13 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * JSR-269 annotation processor that interprets {@linkplain Generator generators}.
@@ -122,6 +114,7 @@ public class GeneratorProcessor extends AbstractProcessor {
             logger.warning("Template root directory not defined, using current user working directory");
             templateRootDir = System.getProperty("user.dir");
         }
+        logger.info("Loading templates from: "+ templateRootDir);
 
         int templateLoggerLibrary = Logger.LIBRARY_NONE;
         if (options.containsKey(OPT_TEMPLATE_LOGGER_LIBRARY)) {

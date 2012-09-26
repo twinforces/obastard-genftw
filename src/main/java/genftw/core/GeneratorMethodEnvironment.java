@@ -16,20 +16,19 @@
 
 package genftw.core;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.processing.Filer;
-import javax.lang.model.element.Element;
-import javax.lang.model.util.Elements;
-
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateModelException;
 import genftw.core.util.ElementGoodies;
+
+import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
+import javax.lang.model.util.Elements;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Runtime environment for processing generator methods.
@@ -61,12 +60,23 @@ public class GeneratorMethodEnvironment {
         }
 
         // Load template
-        Template template = templateConfig.getTemplate(method.getTemplateFile());
+	    Template template = null;
+	    try
+	    {
+		    template = templateConfig.getTemplate(method.getTemplateFile());
+	    }
+	    catch ( IOException e )
+	    {
+		    logger.error("Couldn't find "+method.getTemplateFile()+ " using loader "+ templateConfig.getTemplateLoader(),e,methodElement);
+		    throw e;
+	    }
 
-        // Create template root data-model
+	    // Create template root data-model
         Map<String, Object> rootMap = createTemplateRootModel();
 
-        // Process generator method
+
+
+	    // Process generator method
         method.process(new GeneratorMethodTemplate(filer, template, rootMap, logger));
     }
 

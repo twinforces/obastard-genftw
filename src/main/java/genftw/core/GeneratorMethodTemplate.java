@@ -16,59 +16,100 @@
 
 package genftw.core;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.processing.Filer;
-import javax.tools.FileObject;
-import javax.tools.JavaFileManager.Location;
-
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+
+import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
+import javax.lang.model.util.Elements;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager.Location;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Wraps a FreeMarker {@link Template}, allowing repeated template processing.
  */
-public class GeneratorMethodTemplate {
+public class GeneratorMethodTemplate
+{
 
-    private final Filer filer;
-    private final Template template;
-    private final ProcessorLogger logger;
-    private final Map<String, Object> rootMap;
+	private final Filer filer;
+	private final Template template;
+	private final ProcessorLogger logger;
+	private final Map<String, Object> rootMap;
 
-    public GeneratorMethodTemplate(Filer filer, Template template,
-            Map<String, Object> rootMap, ProcessorLogger logger) {
-        this.filer = filer;
-        this.template = template;
-        this.logger = logger;
-        // Create defensive copy of template data-model to prevent corrupting the original instance
-        this.rootMap = new HashMap<String, Object>(rootMap);
-    }
+	public GeneratorMethodTemplate(Filer filer, Template template,
+	                               Map<String, Object> rootMap, ProcessorLogger logger)
+	{
+		this.filer = filer;
+		this.template = template;
+		this.logger = logger;
+		// Create defensive copy of template data-model to prevent corrupting the original instance
+		this.rootMap = new HashMap<String, Object>( rootMap );
+	}
 
-    public void setRootModelMapping(String key, Object value) {
-        rootMap.put(key, value);
-    }
+	public void setRootModelMapping(String key, Object value)
+	{
+		rootMap.put( key, value );
+	}
 
-    public void process(Location outputRootLocation, String outputFile) throws IOException, TemplateException {
-        logger.info("Generating " + outputFile);
+	public String resolveOutputFile(Element elm, String outputFile) throws IOException, TemplateException
+	{
 
-        PrintWriter outputWriter = null;
-        try {
-            // Create output writer
-            FileObject resource = filer.createResource(outputRootLocation, "", outputFile);
-            outputWriter = new PrintWriter(new BufferedWriter(resource.openWriter()));
 
-            // Process template
-            template.process(rootMap, outputWriter);
-        } finally {
-            // Close output writer
-            if (outputWriter != null) {
-                outputWriter.close();
-            }
-        }
-    }
+		try
+		{
+			Template outputTemplate = new Template( "outputLocation", new StringReader( outputFile ),
+					                                      template.getConfiguration() );
+
+			HashMap<String, Object> outputRootMap = new HashMap<String, Object>( rootMap );    // copy so we can't over write
+
+			if ( elm != null )
+			{
+				outputRootMap.put( "elementSimpleName", elm.getSimpleName() );
+				outputRootMap.put( "packageElementPath", ( (Elements) rootMap.get( "elementUtils" ) ).getPackageOf( elm ).getQualifiedName().toString().replace( ".", "/" ) );
+			}
+
+			StringWriter outputResult = new StringWriter();
+			outputTemplate.process( outputRootMap, outputResult );
+			return outputResult.toString();
+		}
+		catch ( IOException e )
+		{
+			logger.error( "I/O Error resolving output file: " + outputFile, e, elm );
+			throw e;
+		}
+		catch ( TemplateException e )
+		{
+			logger.error( "Template Error resolving output file: " + outputFile, e, elm );
+			throw e;
+		}
+
+	}
+
+	public void process(Location outputRootLocation, String outputFile) throws IOException, TemplateException
+	{
+		logger.info( "Generating " + outputFile );
+
+		PrintWriter outputWriter = null;
+		try
+		{
+			// Create output writer
+			FileObject resource = filer.createResource( outputRootLocation, "", outputFile );
+			outputWriter = new PrintWriter( new BufferedWriter( resource.openWriter() ) );
+
+			// Process template
+			template.process( rootMap, outputWriter );
+		}
+		finally
+		{
+			// Close output writer
+			if ( outputWriter != null )
+			{
+				outputWriter.close();
+			}
+		}
+	}
 
 }

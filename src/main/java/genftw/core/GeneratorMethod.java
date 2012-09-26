@@ -23,12 +23,11 @@ import genftw.api.Produces;
 import genftw.api.Where;
 import genftw.core.match.ElementFinder;
 
-import java.io.IOException;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager.Location;
+import java.io.IOException;
 
 /**
  * Represents a generator method ready for processing.
@@ -59,7 +58,7 @@ public class GeneratorMethod {
     }
 
     void processSimpleMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
-        methodTemplate.process(getOutputRootLocation(), getOutputFile());
+        methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile( null, getOutputFile() ));
     }
 
     void processGroupMatchMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
@@ -68,7 +67,7 @@ public class GeneratorMethod {
             methodTemplate.setRootModelMapping(def.matchResultVariable(), matchedElements);
         }
 
-        methodTemplate.process(getOutputRootLocation(), getOutputFile());
+        methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile(null, getOutputFile()));
     }
 
     void processLoopMatchMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
@@ -82,7 +81,7 @@ public class GeneratorMethod {
 
         for (Element e : matchedElements) {
             methodTemplate.setRootModelMapping(def.matchResultVariable(), e);
-            methodTemplate.process(getOutputRootLocation(), resolveOutputFile(e, getOutputFile()));
+            methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile( e, getOutputFile() ));
         }
 
         if (matchedElements.length == 0) {
@@ -90,13 +89,6 @@ public class GeneratorMethod {
         }
     }
 
-    String resolveOutputFile(Element elm, String outputFileWithVariables) {
-        String result = outputFileWithVariables;
-        result = result.replace("{elementSimpleName}", elm.getSimpleName());
-        result = result.replace("{packageElementPath}",
-                elementUtils.getPackageOf(elm).getQualifiedName().toString().replace(".", "/"));
-        return result;
-    }
 
     public ExecutableElement getElement() {
         return element;
