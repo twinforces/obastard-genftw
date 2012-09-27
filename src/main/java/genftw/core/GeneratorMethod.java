@@ -27,6 +27,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager.Location;
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -58,7 +59,14 @@ public class GeneratorMethod {
     }
 
     void processSimpleMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
-        methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile( null, getOutputFile() ));
+	    String outputFileResolved =  methodTemplate.resolveOutputFile( null, getOutputFile() );
+	    if (getDontOverwrite() && (new File(outputFileResolved)).exists())
+	    {
+		    logger.info("Skipping "+outputFileResolved+" because don't Overwrite is on");
+		    return;
+	    }
+
+        methodTemplate.process(getOutputRootLocation(), outputFileResolved);
     }
 
     void processGroupMatchMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
@@ -67,7 +75,13 @@ public class GeneratorMethod {
             methodTemplate.setRootModelMapping(def.matchResultVariable(), matchedElements);
         }
 
-        methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile(null, getOutputFile()));
+	    String outputFileResolved =  methodTemplate.resolveOutputFile( null, getOutputFile() );
+	    if (getDontOverwrite() && (new File(outputFileResolved)).exists())
+	    {
+		    logger.info("Skipping "+outputFileResolved+" because don't Overwrite is on");
+		    return;
+	    }
+	    methodTemplate.process(getOutputRootLocation(), outputFileResolved);
     }
 
     void processLoopMatchMethod(GeneratorMethodTemplate methodTemplate) throws IOException, TemplateException {
@@ -81,7 +95,13 @@ public class GeneratorMethod {
 
         for (Element e : matchedElements) {
             methodTemplate.setRootModelMapping(def.matchResultVariable(), e);
-            methodTemplate.process(getOutputRootLocation(), methodTemplate.resolveOutputFile( e, getOutputFile() ));
+	        String outputFileResolved =  methodTemplate.resolveOutputFile( e, getOutputFile() );
+	        if (getDontOverwrite() && (new File(outputFileResolved)).exists())
+	        {
+		        logger.info("Skipping "+outputFileResolved+" because don't Overwrite is on");
+		        continue;
+	        }
+	        methodTemplate.process(getOutputRootLocation(),outputFileResolved);
         }
 
         if (matchedElements.length == 0) {
@@ -93,6 +113,11 @@ public class GeneratorMethod {
     public ExecutableElement getElement() {
         return element;
     }
+
+	public boolean getDontOverwrite()
+	{
+		return getOutputAnnotation().dontOverwrite();
+	}
 
     public String getOutputFile() {
         return getOutputAnnotation().output();

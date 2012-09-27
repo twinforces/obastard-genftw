@@ -60,7 +60,7 @@ public class ProcessorLogger {
 
         // Ensure that error messages appear on standard error output
         System.err.println(formatErrorMessage(msg, ex));
-	    ex.printStackTrace();
+	    if (ex != null) ex.printStackTrace();
     }
 
     public void error(String msg, Element elm) {

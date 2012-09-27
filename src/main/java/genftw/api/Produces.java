@@ -18,13 +18,8 @@ package genftw.api;
 
 import genftw.core.GeneratorProcessor;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import javax.tools.StandardLocation;
+import java.lang.annotation.*;
 
 /**
  * Designates a generator method that produces output file(s).
@@ -55,5 +50,10 @@ public @interface Produces {
      * Template file pathname, relative to {@linkplain GeneratorProcessor#OPT_TEMPLATE_ROOT_DIR template root location}.
      */
     String template();
+
+	/**
+	 *  Flag of whether to do it if the file already exists;
+	 */
+	boolean dontOverwrite() default false;
 
 }

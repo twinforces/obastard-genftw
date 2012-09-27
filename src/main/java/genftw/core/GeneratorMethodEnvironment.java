@@ -33,70 +33,77 @@ import java.util.Map;
 /**
  * Runtime environment for processing generator methods.
  */
-public class GeneratorMethodEnvironment {
+public class GeneratorMethodEnvironment
+{
 
-    private final Configuration templateConfig;
-    private final Filer filer;
-    private final ProcessorLogger logger;
-    private final Elements elementUtils;
-    private final ElementGoodies elementGoodies;
+	private final Configuration templateConfig;
+	private final Filer filer;
+	private final ProcessorLogger logger;
+	private final Elements elementUtils;
+	private final ElementGoodies elementGoodies;
 
-    public GeneratorMethodEnvironment(Configuration templateConfig,
-            Filer filer, Elements elementUtils, ProcessorLogger logger) {
-        this.templateConfig = templateConfig;
-        this.filer = filer;
-        this.logger = logger;
-        this.elementUtils = elementUtils;
-        this.elementGoodies = new ElementGoodies(elementUtils);
-    }
+	public GeneratorMethodEnvironment(Configuration templateConfig,
+	                                  Filer filer, Elements elementUtils, ProcessorLogger logger)
+	{
+		this.templateConfig = templateConfig;
+		this.filer = filer;
+		this.logger = logger;
+		this.elementUtils = elementUtils;
+		this.elementGoodies = new ElementGoodies( elementUtils );
+	}
 
-    public void process(GeneratorMethod method) throws IOException, TemplateException {
-        Element methodElement = method.getElement();
-        logger.info("Processing generator method " + methodElement.getSimpleName(), methodElement);
+	public void process(GeneratorMethod method) throws IOException, TemplateException
+	{
+		Element methodElement = method.getElement();
+		logger.info( "Processing generator method " + methodElement.getSimpleName(), methodElement );
 
-        if (!method.getOutputRootLocation().isOutputLocation()) {
-            logger.error("Output file root location is not an output location", methodElement);
-            return;
-        }
+		if ( !method.getOutputRootLocation().isOutputLocation() )
+		{
+			logger.error( "Output file root location is not an output location", methodElement );
+			return;
+		}
 
-        // Load template
-	    Template template = null;
-	    try
-	    {
-		    template = templateConfig.getTemplate(method.getTemplateFile());
-	    }
-	    catch ( IOException e )
-	    {
-		    logger.error("Couldn't find "+method.getTemplateFile()+ " using loader "+ templateConfig.getTemplateLoader(),e,methodElement);
-		    throw e;
-	    }
+		// Load template
+		Template template = null;
+		try
+		{
+			template = templateConfig.getTemplate( method.getTemplateFile() );
+		}
+		catch ( IOException e )
+		{
+			logger.error( "Couldn't find " + method.getTemplateFile() + " using loader " + templateConfig.getTemplateLoader(), e, methodElement );
+			throw e;
+		}
 
-	    // Create template root data-model
-        Map<String, Object> rootMap = createTemplateRootModel();
+		// Create template root data-model
+		Map<String, Object> rootMap = createTemplateRootModel();
 
 
+		// Process generator method
+		method.process( new GeneratorMethodTemplate( filer, template, rootMap, logger ) );
+	}
 
-	    // Process generator method
-        method.process(new GeneratorMethodTemplate(filer, template, rootMap, logger));
-    }
+	Map<String, Object> createTemplateRootModel() throws TemplateModelException
+	{
+		Map<String, Object> rootMap = new HashMap<String, Object>();
 
-    Map<String, Object> createTemplateRootModel() throws TemplateModelException {
-        Map<String, Object> rootMap = new HashMap<String, Object>();
+		// Expose Elements instance reference
+		rootMap.put( "elementUtils", elementUtils );
 
-        // Expose Elements instance reference
-        rootMap.put("elementUtils", elementUtils);
+		// Expose ElementGoodies instance reference
+		rootMap.put( "elementGoodies", elementGoodies );
 
-        // Expose ElementGoodies instance reference
-        rootMap.put("elementGoodies", elementGoodies);
+		// Expose ElementFilter static reference
+		rootMap.put( "ElementFilter", BeansWrapper.getDefaultInstance()
+				                              .getStaticModels().get( "javax.lang.model.util.ElementFilter" ) );
 
-        // Expose ElementFilter static reference
-        rootMap.put("ElementFilter", BeansWrapper.getDefaultInstance()
-                .getStaticModels().get("javax.lang.model.util.ElementFilter"));
+		// Expose Types static reference
+		rootMap.put( "Types", BeansWrapper.getDefaultInstance().getStaticModels().get( "javax.lang.model.util.Types" ) );
 
-        // Expose all available enum classes
-        rootMap.put("enums", BeansWrapper.getDefaultInstance().getEnumModels());
+		// Expose all available enum classes
+		rootMap.put( "enums", BeansWrapper.getDefaultInstance().getEnumModels() );
 
-        return rootMap;
-    }
+		return rootMap;
+	}
 
 }
