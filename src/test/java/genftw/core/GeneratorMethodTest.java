@@ -76,6 +76,7 @@ public class GeneratorMethodTest {
     @Test
     public void processSimpleMethod_expectedBehavior() throws IOException, TemplateException {
         stubOutputAnnotation(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
+	    stubResolveOutputFile(null, "com/test/package/OutputFile","com/test/package/OutputFile");
 
         tested.processSimpleMethod(methodTemplate);
 
@@ -83,7 +84,9 @@ public class GeneratorMethodTest {
         verify(methodTemplate).process(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
     }
 
-    @Test
+
+
+	@Test
     public void processGroupMatchMethod_expectedBehavior() throws IOException, TemplateException {
         stubGroupMatchAnnotation("one", "two");
         stubOutputAnnotation(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
@@ -95,8 +98,9 @@ public class GeneratorMethodTest {
         Element[] matchedElementsForMetaDataTwo = new Element[] {};
         stubElementFinderWithMatchDefinition(groupMatchAnnotation.value()[1],
                 matchedElementsForMetaDataTwo, "matchResultTwo");
+		stubResolveOutputFile(null, "com/test/package/OutputFile","com/test/package/OutputFile");
 
-        tested.processGroupMatchMethod(methodTemplate);
+		tested.processGroupMatchMethod(methodTemplate);
 
         verify(methodTemplate).setRootModelMapping("matchResultOne", matchedElementsForMetaDataOne);
         verify(methodTemplate).setRootModelMapping("matchResultTwo", matchedElementsForMetaDataTwo);
@@ -107,8 +111,9 @@ public class GeneratorMethodTest {
     public void processGroupMatchMethod_noMatchDefinitions() throws IOException, TemplateException {
         stubGroupMatchAnnotation();
         stubOutputAnnotation(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
+	    stubResolveOutputFile(null, "com/test/package/OutputFile","com/test/package/OutputFile");
 
-        tested.processGroupMatchMethod(methodTemplate);
+	    tested.processGroupMatchMethod(methodTemplate);
 
         verify(methodTemplate, never()).setRootModelMapping(anyString(), anyObject());
         verify(methodTemplate).process(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
@@ -118,8 +123,9 @@ public class GeneratorMethodTest {
     public void processLoopMatchMethod_expectedBehavior() throws IOException, TemplateException {
         stubLoopMatchAnnotation("each", "extraOne", "extraTwo");
         stubOutputAnnotation(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
+	    stubResolveOutputFile(null, "com/test/package/OutputFile","com/test/package/OutputFile");
 
-        Element loopElementOne = mockElement("MyClassOne", "com.test.package");
+	    Element loopElementOne = mockElement("MyClassOne", "com.test.package");
         Element loopElementTwo = mockElement("MyClassTwo", "com.test.package");
         Element[] matchedElementsForMetaDataEach = new Element[] { loopElementOne, loopElementTwo };
         stubElementFinderWithMatchDefinition(loopMatchAnnotation.value(),
@@ -133,7 +139,14 @@ public class GeneratorMethodTest {
         stubElementFinderWithMatchDefinition(loopMatchAnnotation.matchExtraElements()[1],
                 matchedElementsForMetaDataExtraTwo, "matchResultExtraTwo");
 
-        tested.processLoopMatchMethod(methodTemplate);
+	    for (Element e: matchedElementsForMetaDataEach)
+		    stubResolveOutputFile(e, "com/test/package/OutputFile","com/test/package/OutputFile");
+	    for (Element e: matchedElementsForMetaDataExtraOne)
+		    stubResolveOutputFile(e, "com/test/package/OutputFile","com/test/package/OutputFile");
+	    for (Element e: matchedElementsForMetaDataExtraTwo)
+		    stubResolveOutputFile(e, "com/test/package/OutputFile","com/test/package/OutputFile");
+
+	    tested.processLoopMatchMethod(methodTemplate);
 
         verify(methodTemplate).setRootModelMapping("matchResultExtraOne",
                 matchedElementsForMetaDataExtraOne);
@@ -149,8 +162,9 @@ public class GeneratorMethodTest {
     public void processLoopMatchMethod_noMatchDefinitions() throws IOException, TemplateException {
         stubLoopMatchAnnotation("each");
         stubOutputAnnotation(StandardLocation.SOURCE_OUTPUT, "com/test/package/OutputFile");
+	    stubResolveOutputFile(null, "com/test/package/OutputFile","com/test/package/OutputFile");
 
-        stubElementFinderWithMatchDefinition(loopMatchAnnotation.value(),
+	    stubElementFinderWithMatchDefinition(loopMatchAnnotation.value(),
                 new Element[] {}, "matchResultEach");
 
         tested.processLoopMatchMethod(methodTemplate);
@@ -159,6 +173,11 @@ public class GeneratorMethodTest {
         verify(methodTemplate, never()).process(any(StandardLocation.class), anyString());
         verify(logger).warning(anyString(), any(Element.class));
     }
+
+	private void stubResolveOutputFile(Element e, String sIn, String sOut) throws IOException, TemplateException
+	{
+		when(methodTemplate.resolveOutputFile(e,sIn)).thenReturn(sOut);
+	}
 
     void stubOutputAnnotation(StandardLocation outputRootLocation, String outputFile) {
         when(outputAnnotation.outputRootLocation()).thenReturn(outputRootLocation);
@@ -171,26 +190,6 @@ public class GeneratorMethodTest {
         when(elementFinder.getElementsFound(def)).thenReturn(matchedElements);
         when(def.matchResultVariable()).thenReturn(matchResultVariable);
     }
-
-   /* @Test
-    public void resolveOutputFile_withSupportedVariables() {
-        Element element = mockElement("MyClass", "com.test.package");
-
-        String result = tested.resolveOutputFile(element,
-                "root/${packageElementPath}/${elementSimpleName}Generated");
-
-        assertThat(result, equalTo("root/com/test/package/MyClassGenerated"));
-    }
-
-    @Test
-    public void resolveOutputFile_withUnknownVariables() {
-        Element element = mockElement("MyClass", "com.test.package");
-
-        String result = tested.resolveOutputFile(element,
-                "root/${packageElementPath}/${unknownVariable}Generated");
-
-        assertThat(result, equalTo("root/com/test/package/{unknownVariable}Generated"));
-    }        */
 
     Element mockElement(String simpleName, String packageQualifiedName) {
         Element element = mock(Element.class);

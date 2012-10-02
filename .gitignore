@@ -2,6 +2,7 @@
 target
 # Gradle output directory
 build
+.gradle
 
 # IDE files
 .settings
