@@ -1,0 +1,24 @@
+	apply plugin: 'java'
+	
+	
+	group="genftw"
+
+	sourceCompatibility = 1.6
+	version = '1.0-SNAPSHOT'
+	repositories {
+		mavenCentral()
+	}
+	
+	ext {
+		freemarkerVersion='2.3.19'
+		junitVersion='4.10'
+		mockitoVersion='1.9.0'
+	}
+	
+	dependencies {
+		compile "org.freemarker:freemarker:${freemarkerVersion}"
+		compile "junit:junit:${junitVersion}"
+		compile "org.mockito:mockito-core:${mockitoVersion}"
+	}
+
+	

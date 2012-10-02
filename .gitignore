@@ -1,8 +1,11 @@
 # Maven output directory
 target
+# Gradle output directory
+build
 
 # IDE files
 .settings
 .project
 .classpath
-
+.idea
+genftw.iml
