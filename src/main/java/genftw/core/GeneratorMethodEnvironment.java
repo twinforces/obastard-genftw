@@ -130,10 +130,19 @@ public class GeneratorMethodEnvironment
 		}
 		for (TypeElement ele: generators)
 		{
-			ClassTemplateLoader ctl = new ClassTemplateLoader( ele.getClass(), "" );
-			loaders.add(ctl);
-			ClassTemplateLoader ctl2 = new ClassTemplateLoader( ele.getClass(), "templates" );
-			loaders.add(ctl2);
+			try
+			{
+				Class elementClass = Class.forName(ele.getQualifiedName().toString());
+				logger.info("Loading templates relative to "+elementClass.getCanonicalName());
+				ClassTemplateLoader ctl = new ClassTemplateLoader( elementClass, "" );
+				loaders.add(ctl);
+				ClassTemplateLoader ctl2 = new ClassTemplateLoader( elementClass, "templates" );
+				loaders.add(ctl2);
+			}
+			catch ( ClassNotFoundException e )
+			{
+				logger.info( "Couldn't find class for " + ele.getQualifiedName()+" using class directory only works with templates in jars" );
+			}
 
 		}
 
