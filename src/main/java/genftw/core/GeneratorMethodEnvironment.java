@@ -16,6 +16,10 @@
 
 package genftw.core;
 
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -25,10 +29,14 @@ import genftw.core.util.ElementGoodies;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Runtime environment for processing generator methods.
@@ -41,15 +49,17 @@ public class GeneratorMethodEnvironment
 	private final ProcessorLogger logger;
 	private final Elements elementUtils;
 	private final ElementGoodies elementGoodies;
+	private final String templateRootPath;
 
 	public GeneratorMethodEnvironment(Configuration templateConfig,
-	                                  Filer filer, Elements elementUtils, ProcessorLogger logger)
+	                                  Filer filer, Elements elementUtils, ProcessorLogger logger, String templateRootPath)
 	{
 		this.templateConfig = templateConfig;
 		this.filer = filer;
 		this.logger = logger;
 		this.elementUtils = elementUtils;
 		this.elementGoodies = new ElementGoodies( elementUtils );
+		this.templateRootPath = templateRootPath;
 	}
 
 	public void process(GeneratorMethod method) throws IOException, TemplateException
@@ -106,4 +116,28 @@ public class GeneratorMethodEnvironment
 		return rootMap;
 	}
 
+	public void addClassPaths(Set<TypeElement> generators)
+	{
+// Configure template root directory
+		ArrayList<TemplateLoader> loaders = new ArrayList<TemplateLoader>(1+generators.size());
+
+		try {
+			FileTemplateLoader ftl1=new FileTemplateLoader(new File(templateRootPath));
+			loaders.add(ftl1);
+		} catch (IOException e) {
+			throw new IllegalArgumentException(logger.formatErrorMessage(
+					                                                            "Error while setting template root directory", e), e);
+		}
+		for (TypeElement ele: generators)
+		{
+			ClassTemplateLoader ctl = new ClassTemplateLoader( ele.getClass(), "" );
+			loaders.add(ctl);
+			ClassTemplateLoader ctl2 = new ClassTemplateLoader( ele.getClass(), "templates" );
+			loaders.add(ctl2);
+
+		}
+
+		MultiTemplateLoader mtl = new MultiTemplateLoader( loaders.toArray(new TemplateLoader[loaders.size()] ) );
+		templateConfig.setTemplateLoader( mtl );
+	}
 }

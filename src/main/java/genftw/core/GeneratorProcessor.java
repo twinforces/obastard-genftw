@@ -35,7 +35,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,7 +144,9 @@ public class GeneratorProcessor extends AbstractProcessor {
         logger.info("GeneratorProcessor started");
 
         // Find generator methods
-        methodFinder.scan(getGeneratorElements(roundEnv));
+	    Set<TypeElement> generators = getGeneratorElements(roundEnv);
+	    methodEnv.addClassPaths(generators);
+        methodFinder.scan(generators);
         GeneratorMethod[] methodsFound = methodFinder.getMethodsFound();
 
         // Scan source elements by generator method match criteria
@@ -241,15 +242,10 @@ public class GeneratorProcessor extends AbstractProcessor {
         // Create FreeMarker configuration
         Configuration templateConfig = new Configuration();
 
-        // Configure template root directory
-        try {
-            templateConfig.setDirectoryForTemplateLoading(new File(templateRootDir));
-        } catch (IOException e) {
-            throw new IllegalArgumentException(logger.formatErrorMessage(
-                    "Error while setting template root directory", e), e);
-        }
+	    templateRootDir = checkTemplateRoot( templateRootDir );
 
-        // Cache templates using strong references for efficiency
+
+	    // Cache templates using strong references for efficiency
         templateConfig.setCacheStorage(new StrongCacheStorage());
 
         // Cache templates during annotation processor lifetime
@@ -261,7 +257,26 @@ public class GeneratorProcessor extends AbstractProcessor {
         templateConfig.setDefaultEncoding(defaultEncoding);
         templateConfig.setLocalizedLookup(false);
 
-        return new GeneratorMethodEnvironment(templateConfig, filer, elementUtils, logger);
+        return new GeneratorMethodEnvironment(templateConfig, filer, elementUtils, logger,templateRootDir);
     }
+
+	private String checkTemplateRoot(String templateRootDir)
+	{
+		File templateRoot = new File(templateRootDir);
+		if (!templateRoot.exists())
+		{
+			throw new IllegalArgumentException( "Template root directory doesn't exist: "+templateRootDir);
+		}
+		if (!templateRoot.isDirectory())
+		{
+			throw new IllegalArgumentException( "Template root directory is not a directory: "+templateRootDir);
+		}
+		if (!templateRoot.canRead())
+		{
+			throw new IllegalArgumentException( "Template root directory not readable: "+templateRootDir);
+		}
+		templateRootDir = templateRoot.getAbsolutePath();
+		return templateRootDir;
+	}
 
 }
