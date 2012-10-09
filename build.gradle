@@ -19,6 +19,7 @@
 		compile "org.freemarker:freemarker:${freemarkerVersion}"
 		compile "junit:junit:${junitVersion}"
 		compile "org.mockito:mockito-core:${mockitoVersion}"
+        compile "org.reflections:reflections:0.9.8"
 	}
 
 	

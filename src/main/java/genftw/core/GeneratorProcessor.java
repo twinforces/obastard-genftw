@@ -26,6 +26,8 @@ import genftw.core.match.ElementFinder;
 import genftw.core.match.ElementMatcher;
 import genftw.core.match.MetaDataMatcher;
 
+import org.reflections.*;
+
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -46,7 +48,7 @@ import java.util.Set;
  * 
  * @see Generator
  */
-@SupportedAnnotationTypes("genftw.api.Generator")
+@SupportedAnnotationTypes("genftw.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 @SupportedOptions({
         GeneratorProcessor.OPT_MATCHED_ELEMENT_PACKAGE_FILTER,
@@ -169,11 +171,28 @@ public class GeneratorProcessor extends AbstractProcessor {
         return true;
     }
 
+
     /**
      * Returns valid generator types for further processing.
      */
     Set<TypeElement> getGeneratorElements(RoundEnvironment roundEnv) {
         Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(Generator.class);
+
+	    if (annotatedElements.isEmpty())
+	    {
+		    logger.info("No Generators Found! Scanning classpath instead...");
+
+		    Reflections r = new Reflections("genftw");
+		    Set<Class<?> > generators = r.getTypesAnnotatedWith(Generator.class);
+		    HashSet newElements = new HashSet<Element>(generators.size());
+		    for (Class<?> clazz: generators)
+		    {
+			    TypeElement te=processingEnv.getElementUtils().getTypeElement(clazz.getCanonicalName());
+			    newElements.add(te);
+		    }
+		    annotatedElements=newElements;
+
+	    }
         Set<TypeElement> generatorElements = new HashSet<TypeElement>(annotatedElements.size());
 
         for (Element e : annotatedElements) {
