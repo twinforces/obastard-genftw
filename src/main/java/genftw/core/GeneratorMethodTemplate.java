@@ -20,6 +20,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import javax.tools.FileObject;
@@ -101,6 +102,18 @@ public class GeneratorMethodTemplate
 
 			// Process template
 			template.process( rootMap, outputWriter );
+		}
+		catch (FilerException ex)
+		{
+			if (ex.getMessage().startsWith("Attempt to reopen"))
+			{
+				logger.info("Ignoring regeneration of " + outputFile);
+			}
+			else
+			{
+				logger.error( "Filer exception output file: " + outputFile, ex,null );
+				throw ex;
+			}
 		}
 		finally
 		{

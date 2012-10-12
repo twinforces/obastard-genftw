@@ -18,15 +18,14 @@ package genftw.core.match;
 
 import genftw.api.Where;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Matches elements against given criteria.
@@ -69,8 +68,8 @@ public class ElementMatcher {
             for (AnnotationMirror a : elementUtils.getAllAnnotationMirrors(elm)) {
                 elementAnnotationNames.add(a.getAnnotationType().toString());
             }
-
-            result = result && elementAnnotationNames.containsAll(mandatoryAnnotationNames);
+	        elementAnnotationNames.retainAll(mandatoryAnnotationNames);
+            result = result && !elementAnnotationNames.isEmpty();
         }
 
         // Match by meta-data
