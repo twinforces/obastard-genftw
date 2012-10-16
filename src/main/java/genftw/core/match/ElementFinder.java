@@ -19,22 +19,16 @@ package genftw.core.match;
 import genftw.api.Where;
 import genftw.core.util.HashCodeUtil;
 
+import javax.lang.model.element.*;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementScanner6;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementScanner6;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 
 /**
  * Element visitor that scans root elements, looking for elements matching given criteria.
@@ -106,8 +100,9 @@ public class ElementFinder extends ElementScanner6<Void, Set<Where>> {
         result = HashCodeUtil.hash(result, def.kind());
         result = HashCodeUtil.hash(result, def.modifiers());
         result = HashCodeUtil.hash(result, def.simpleNameMatches());
-        result = HashCodeUtil.hash(result, def.annotations());
-        result = HashCodeUtil.hash(result, def.metaData());
+	    result = HashCodeUtil.hash(result, def.annotationsAll());
+	    result = HashCodeUtil.hash(result, def.annotationsAny());
+	    result = HashCodeUtil.hash(result, def.metaData());
         return result;
     }
 

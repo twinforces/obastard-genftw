@@ -16,14 +16,13 @@
 
 package genftw.api;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 
 /**
  * Defines source element match criteria.
@@ -63,11 +62,18 @@ public @interface Where {
     String simpleNameMatches() default DONT_MATCH;
 
     /**
-     * Filter elements that have given annotations, defined by their fully qualified names.
+     * Filter elements that all of the given annotations, defined by their fully qualified names.
      * <p>
      * Annotations may appear directly or be inherited.
      */
-    String[] annotations() default {};
+    String[] annotationsAll() default {};
+
+	/**
+	 * Filter elements that have any of the given annotations, defined by their fully qualified names.
+	 * <p>
+	 * Annotations may appear directly or be inherited.
+	 */
+	String[] annotationsAny() default {};
 
     /**
      * {@linkplain MetaData Meta-data} match string.

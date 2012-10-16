@@ -61,16 +61,28 @@ public class ElementMatcher {
         }
 
         // Match by annotations
-        if (result && def.annotations().length > 0) {
-            Set<String> mandatoryAnnotationNames = new HashSet<String>(Arrays.asList(def.annotations()));
+        if (result && def.annotationsAll().length > 0) {
+            Set<String> mandatoryAnnotationNames = new HashSet<String>(Arrays.asList(def.annotationsAll()));
 
             Set<String> elementAnnotationNames = new HashSet<String>();
             for (AnnotationMirror a : elementUtils.getAllAnnotationMirrors(elm)) {
                 elementAnnotationNames.add(a.getAnnotationType().toString());
             }
-	        elementAnnotationNames.retainAll(mandatoryAnnotationNames);
+	        elementAnnotationNames.containsAll(mandatoryAnnotationNames);
             result = result && !elementAnnotationNames.isEmpty();
         }
+
+	    // Match by annotations
+	    if (result && def.annotationsAny().length > 0) {
+		    Set<String> mandatoryAnnotationNames = new HashSet<String>(Arrays.asList(def.annotationsAny()));
+
+		    Set<String> elementAnnotationNames = new HashSet<String>();
+		    for (AnnotationMirror a : elementUtils.getAllAnnotationMirrors(elm)) {
+			    elementAnnotationNames.add(a.getAnnotationType().toString());
+		    }
+		    elementAnnotationNames.retainAll(mandatoryAnnotationNames);
+		    result = result && !elementAnnotationNames.isEmpty();
+	    }
 
         // Match by meta-data
         if (result && !Where.DONT_MATCH.equals(def.metaData())) {
